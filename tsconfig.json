@@ -1,4 +1,10 @@
 {
+  "compilerOptions": {
+    "types": ["react-i18next", "i18next", "node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
