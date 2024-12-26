@@ -2,7 +2,7 @@ export interface Transcription {
   id: string;
   sentencelocal: string;
   sentenceapi: string;
-  sentenceuser?: string | null;
+  sentenceuser?: string;
   audioUrl: string;
   createdAt: Date;
   updatedAt: Date;

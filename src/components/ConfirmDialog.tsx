@@ -1,6 +1,12 @@
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from './ui/dialog';
 import { Button } from './ui/button';
-import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -11,21 +17,19 @@ interface ConfirmDialogProps {
 }
 
 export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message }: ConfirmDialogProps) {
-  const { t } = useTranslation();
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{message}</DialogDescription>
         </DialogHeader>
-        <p className="text-gray-600">{message}</p>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            {t('dialogs.cancel')}
+            Cancel
           </Button>
           <Button variant="destructive" onClick={onConfirm}>
-            {t('dialogs.confirm')}
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>

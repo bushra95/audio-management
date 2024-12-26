@@ -1,20 +1,17 @@
 import axios from 'axios';
 import { ENV } from '../config/env';
-import { AuthService } from '../services/auth.service';
-
-console.log('API URL:', ENV.API_URL); // Debug log
 
 export const apiClient = axios.create({
   baseURL: ENV.API_URL,
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 10000
+  withCredentials: true
 });
 
 // Add auth token to requests
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(ENV.AUTH_TOKEN_KEY);
+  const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -29,17 +26,14 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
-        const authService = AuthService.getInstance();
-        const newToken = await authService.refreshToken();
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        const refreshToken = localStorage.getItem('refresh_token');
+        const response = await apiClient.post('/auth/refresh', { refreshToken });
+        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('refresh_token', response.data.refreshToken);
         return apiClient(originalRequest);
-      } catch (refreshError) {
-        const authService = AuthService.getInstance();
-        authService.logout();
+      } catch {
         window.location.href = '/login';
-        return Promise.reject(refreshError);
       }
     }
 

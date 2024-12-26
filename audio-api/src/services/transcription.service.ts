@@ -13,36 +13,64 @@ export class TranscriptionService {
     return TranscriptionService.instance;
   }
 
-  async getTranscriptions(page: number = 1, limit: number = 10): Promise<{ data: Transcription[]; total: number }> {
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      prisma.$queryRaw<Transcription[]>`
-        SELECT * FROM "transcription"
-        ORDER BY "createdAt" DESC
-        LIMIT ${limit}
-        OFFSET ${skip}
-      `,
-      prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(*) as count FROM "transcription"
-      `.then(result => Number(result[0].count))
-    ]);
+  async getTranscriptions(page: number = 1): Promise<{ data: Transcription[]; total: number }> {
+    try {
+      const take = 5;
+      const skip = (page - 1) * take;
 
-    return { data, total };
+      const [data, total] = await Promise.all([
+        prisma.transcription.findMany({
+          skip,
+          take,
+          select: {
+            id: true,
+            sentencelocal: true,
+            sentenceapi: true,
+            sentenceuser: true,
+            audioUrl: true,
+            createdAt: true,
+            updatedAt: true
+          },
+          orderBy: [
+            { updatedAt: 'desc' },
+            { id: 'asc' }
+          ],
+        }),
+        prisma.transcription.count()
+      ]);
+
+      const formattedData = data.map(item => ({
+        ...item,
+        sentenceuser: item.sentenceuser || ''
+      }));
+
+      return { data: formattedData, total };
+    } catch (error) {
+      console.error('Error in getTranscriptions:', error);
+      throw error;
+    }
   }
 
   async updateTranscription(id: string, sentenceuser: string): Promise<Transcription> {
-    return prisma.$queryRaw<Transcription>`
-      UPDATE "transcription"
-      SET "sentenceuser" = ${sentenceuser}
-      WHERE id = ${id}
-      RETURNING *
-    `;
+    try {
+      return await prisma.transcription.update({
+        where: { id },
+        data: { sentenceuser },
+      });
+    } catch (error) {
+      console.error('Error in updateTranscription:', error);
+      throw error;
+    }
   }
 
   async deleteTranscription(id: string): Promise<void> {
-    await prisma.$executeRaw`
-      DELETE FROM "transcription"
-      WHERE id = ${id}
-    `;
+    try {
+      await prisma.transcription.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.error('Error in deleteTranscription:', error);
+      throw error;
+    }
   }
-} 
+}
