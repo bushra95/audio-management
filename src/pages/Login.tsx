@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { Button } from '../components/ui/button';
+import { useEffect } from 'react';
 
 interface LoginForm {
   email: string;
@@ -13,14 +14,20 @@ interface LoginForm {
 export function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { showToast } = useToast();
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<LoginForm>();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: '/', replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const onSubmit = async (data: LoginForm) => {
     try {
       await login(data);
-      navigate({ to: '/' });
+      navigate({ to: '/', replace: true });
     } catch (error) {
       showToast(error instanceof Error ? error.message : t('auth.invalidCredentials'), 'error');
     }

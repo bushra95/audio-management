@@ -9,13 +9,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated && location.pathname !== '/login') {
-      navigate({ to: '/login' });
+      navigate({ to: '/login', replace: true });
+    } else if (isAuthenticated && location.pathname === '/login') {
+      navigate({ to: '/', replace: true });
     }
-  }, [isAuthenticated, navigate, location]);
-
-  if (!isAuthenticated && location.pathname !== '/login') {
-    return null;
-  }
+  }, [isAuthenticated, navigate, location.pathname]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,7 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </header>
       )}
       <main className="container mx-auto px-4 py-8">
-        {children}
+        {(!isAuthenticated && location.pathname === '/login') || isAuthenticated ? children : null}
       </main>
     </div>
   );

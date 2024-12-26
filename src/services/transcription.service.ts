@@ -1,5 +1,17 @@
 import { apiClient } from '../lib/api-client';
-import { Transcription, TranscriptionResponse } from '../types/transcription';
+
+export interface TranscriptionResponse {
+  data: Transcription[];
+  total: number;
+}
+
+export interface Transcription {
+  id: string;
+  sentencelocal: string;
+  sentenceapi: string;
+  sentenceuser: string | null | undefined;
+  audioUrl: string;
+}
 
 export class TranscriptionService {
   private static instance: TranscriptionService;

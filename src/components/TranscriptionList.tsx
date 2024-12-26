@@ -8,9 +8,11 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Button } from './ui/button';
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Transcription } from '../services/transcription.service';
+import { TranscriptionResponse } from '../services/transcription.service';
 
 const transcriptionService = TranscriptionService.getInstance();
 const ITEMS_PER_PAGE = 5;
@@ -20,17 +22,6 @@ interface TranscriptionForm {
     id: string;
     sentenceuser: string;
   }[];
-}
-
-interface QueryData {
-  data: Array<{
-    id: string;
-    sentencelocal: string;
-    sentenceapi: string;
-    sentenceuser?: string | null;
-    audioUrl: string;
-  }>;
-  total: number;
 }
 
 export function TranscriptionList() {
@@ -51,7 +42,9 @@ export function TranscriptionList() {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['transcriptions', page],
-    queryFn: () => transcriptionService.getTranscriptions(page)
+    queryFn: () => transcriptionService.getTranscriptions(page),
+    staleTime: 0,
+    refetchOnWindowFocus: false,
   });
 
   const form = useForm<TranscriptionForm>({
@@ -61,30 +54,27 @@ export function TranscriptionList() {
     }
   });
 
-  const { replace } = useFieldArray({
-    control: form.control,
-    name: "transcriptions"
-  });
+  
 
   useEffect(() => {
     if (data) {
-      replace(
-        data.data.map((t) => ({
-          id: t.id,
-          sentenceuser: t.sentenceuser ?? t.sentencelocal ?? ''
-        }))
-      );
+      const formValues = data.data.map((t: Transcription) => ({
+        id: t.id,
+        sentenceuser: t.sentenceuser || t.sentencelocal || ''
+      }));
+      form.reset({ transcriptions: formValues });
     }
-  }, [data, replace]);
+  }, [data, form]);
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, sentenceuser }: { id: string; sentenceuser: string }) => 
+    mutationFn: ({ id, sentenceuser }: { id: string; sentenceuser: string }) =>
       transcriptionService.updateTranscription(id, sentenceuser),
     onMutate: async ({ id, sentenceuser }) => {
       await queryClient.cancelQueries({ queryKey: ['transcriptions'] });
       const previousData = queryClient.getQueryData(['transcriptions', page]);
 
-      queryClient.setQueryData(['transcriptions', page], (old: QueryData | undefined) => {
+      // Optimistically update
+      queryClient.setQueryData<TranscriptionResponse>(['transcriptions', page], (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -96,24 +86,16 @@ export function TranscriptionList() {
 
       return { previousData };
     },
-    onError: (err, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(['transcriptions', page], context.previousData);
-      }
-      showToast(err instanceof Error ? err.message : t('errors.saving'), 'error');
-    },
-    onSuccess: (updatedTranscription) => {
-      queryClient.setQueriesData<QueryData>({ queryKey: ['transcriptions'] }, (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: old.data.map((item) => 
-            item.id === updatedTranscription.id ? updatedTranscription : item
-          )
-        };
-      });
-      
+    onSuccess: () => {
       showToast(t('transcriptions.updateSuccess'), 'success');
+      queryClient.invalidateQueries({ 
+        queryKey: ['transcriptions'],
+        exact: false,
+        type: 'all'
+      });
+    },
+    onError: (error) => {
+      showToast(error instanceof Error ? error.message : t('errors.saving'), 'error');
     }
   });
 
@@ -133,7 +115,7 @@ export function TranscriptionList() {
 
   const onSubmit = (id: string) => {
     const transcription = form.getValues().transcriptions.find(t => t.id === id);
-    if (transcription) {
+    if (transcription && transcription.sentenceuser.trim()) {
       updateMutation.mutate({
         id,
         sentenceuser: transcription.sentenceuser
@@ -149,7 +131,7 @@ export function TranscriptionList() {
     <div className="flex flex-col min-h-screen">
       <div className="flex-1 overflow-y-auto pb-20">
         <div className="space-y-6">
-          {data.data.map((transcription, index) => (
+          {data.data.map((transcription: Transcription, index: number) => (
             <form key={transcription.id} onSubmit={form.handleSubmit(() => onSubmit(transcription.id))}>
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="mb-4">
@@ -236,4 +218,4 @@ export function TranscriptionList() {
       />
     </div>
   );
-} 
+}

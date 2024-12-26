@@ -22,15 +22,29 @@ export class TranscriptionService {
         prisma.transcription.findMany({
           skip,
           take,
+          select: {
+            id: true,
+            sentencelocal: true,
+            sentenceapi: true,
+            sentenceuser: true,
+            audioUrl: true,
+            createdAt: true,
+            updatedAt: true
+          },
           orderBy: [
-            { createdAt: 'asc' },
+            { updatedAt: 'desc' },
             { id: 'asc' }
           ],
         }),
         prisma.transcription.count()
       ]);
 
-      return { data, total };
+      const formattedData = data.map(item => ({
+        ...item,
+        sentenceuser: item.sentenceuser || ''
+      }));
+
+      return { data: formattedData, total };
     } catch (error) {
       console.error('Error in getTranscriptions:', error);
       throw error;
@@ -38,15 +52,25 @@ export class TranscriptionService {
   }
 
   async updateTranscription(id: string, sentenceuser: string): Promise<Transcription> {
-    return prisma.transcription.update({
-      where: { id },
-      data: { sentenceuser }
-    });
+    try {
+      return await prisma.transcription.update({
+        where: { id },
+        data: { sentenceuser },
+      });
+    } catch (error) {
+      console.error('Error in updateTranscription:', error);
+      throw error;
+    }
   }
 
   async deleteTranscription(id: string): Promise<void> {
-    await prisma.transcription.delete({
-      where: { id }
-    });
+    try {
+      await prisma.transcription.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.error('Error in deleteTranscription:', error);
+      throw error;
+    }
   }
-} 
+}
