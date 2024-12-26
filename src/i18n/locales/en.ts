@@ -36,7 +36,12 @@ export const en = {
     previous: 'Previous',
     next: 'Next',
     page: 'Page',
-    showing: 'Displaying {{count}} records of {{total}} total'
+    of: 'of',
+    showing: 'Showing {{start}} to {{end}} of {{total}} transcriptions',
+    firstPage: 'First page',
+    lastPage: 'Last page',
+    previousPage: 'Previous page',
+    nextPage: 'Next page'
   },
   errors: {
     loading: 'Failed to load transcriptions',

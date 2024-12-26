@@ -34,33 +34,47 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <h2 className="text-3xl font-bold text-center">{t('auth.login')}</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-xl border border-gray-100">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            {t('auth.login')}
+          </h2>
+          <p className="text-gray-500">
+            Sign in to manage your transcriptions
+          </p>
+        </div>
+        
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-600">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               {t('auth.email')}
             </label>
             <input
               {...register('email')}
               type="email"
               defaultValue="test@example.com"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-700"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all duration-200"
             />
           </div>
+          
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-600">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               {t('auth.password')}
             </label>
             <input
               {...register('password')}
               type="password"
               defaultValue="password123"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-700"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all duration-200"
             />
           </div>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          
+          <Button 
+            type="submit" 
+            disabled={isSubmitting} 
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl transition-colors duration-200"
+          >
             {isSubmitting ? t('auth.submitting') : t('auth.submit')}
           </Button>
         </form>

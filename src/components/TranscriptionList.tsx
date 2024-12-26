@@ -127,82 +127,166 @@ export function TranscriptionList() {
   if (error) return <ErrorMessage message={t('errors.loading')} />;
   if (!data?.data.length) return <div>{t('transcriptions.noData')}</div>;
 
+  const start = (page - 1) * ITEMS_PER_PAGE + 1;
+  const end = Math.min(page * ITEMS_PER_PAGE, data.total);
+  const totalPages = Math.ceil(data.total / ITEMS_PER_PAGE);
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="flex-1 overflow-y-auto pb-20">
-        <div className="space-y-6">
+        <div className="container mx-auto px-4 py-6 space-y-4">
           {data.data.map((transcription: Transcription, index: number) => (
             <form key={transcription.id} onSubmit={form.handleSubmit(() => onSubmit(transcription.id))}>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="mb-4">
-                  <h3 className="font-medium text-gray-600">{t('transcriptions.original')}</h3>
-                  <div className="w-full p-2 border rounded bg-gray-50">
-                    {transcription.sentencelocal}
+              <div className="bg-white p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-blue-100/50">
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg border border-blue-100/50">
+                    <h3 className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-2 flex items-center">
+                      <span className="bg-white/80 px-3 py-1 rounded-md shadow-sm">Audio Recording</span>
+                    </h3>
+                    <audio controls className="w-full h-8">
+                      <source src={transcription.audioUrl} type="audio/mpeg" />
+                    </audio>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-2 flex items-center">
+                      <span className="bg-blue-50 px-3 py-1 rounded-md shadow-sm">{t('transcriptions.original')}</span>
+                    </h3>
+                    <div className="text-sm p-3 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50/30 text-gray-700 border border-blue-100/50 shadow-sm">
+                      {transcription.sentencelocal}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-2 flex items-center">
+                      <span className="bg-blue-50 px-3 py-1 rounded-md shadow-sm">{t('transcriptions.api')}</span>
+                    </h3>
+                    <div className="text-sm p-3 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50/30 text-gray-700 border border-blue-100/50 shadow-sm">
+                      {transcription.sentenceapi}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-2 flex items-center">
+                      <span className="bg-blue-50 px-3 py-1 rounded-md shadow-sm">{t('transcriptions.user')}</span>
+                    </h3>
+                    <textarea
+                      {...form.register(`transcriptions.${index}.sentenceuser`)}
+                      className="w-full text-sm p-3 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button 
+                      type="submit" 
+                      disabled={updateMutation.isPending}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg shadow-sm hover:shadow transition-all duration-200"
+                    >
+                      {t('actions.save')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setDeleteId(transcription.id)}
+                      disabled={deleteMutation.isPending}
+                      className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all duration-200"
+                    >
+                      {t('actions.delete')}
+                    </Button>
                   </div>
                 </div>
-                <div className="mb-4">
-                  <h3 className="font-medium text-gray-600">{t('transcriptions.api')}</h3>
-                  <div className="w-full p-2 border rounded bg-gray-50">
-                    {transcription.sentenceapi}
-                  </div>
-                </div>
-                <div className="mb-4">
-                  <h3 className="font-medium text-gray-600">{t('transcriptions.user')}</h3>
-                  <textarea
-                    {...form.register(`transcriptions.${index}.sentenceuser`)}
-                    className="w-full p-2 border rounded text-gray-700"
-                  />
-                  {form.formState.errors.transcriptions?.[index]?.sentenceuser && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {form.formState.errors.transcriptions[index]?.sentenceuser?.message}
-                    </p>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={updateMutation.isPending}>
-                    {t('actions.save')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => setDeleteId(transcription.id)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    {t('actions.delete')}
-                  </Button>
-                </div>
-                <audio controls className="mt-4 w-full">
-                  <source src={transcription.audioUrl} type="audio/mpeg" />
-                </audio>
               </div>
             </form>
           ))}
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4">
-        <div className="container mx-auto">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Displaying {data.data.length} records of {data.total} total
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-200 shadow-lg">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center space-x-3 text-sm">
+              <div className="px-4 py-2 bg-indigo-50 rounded-lg text-indigo-700 font-semibold">
+                {start}-{end}
+              </div>
+              <span className="text-gray-500">of</span>
+              <div className="px-4 py-2 bg-indigo-50 rounded-lg text-indigo-700 font-semibold">
+                {data.total}
+              </div>
+              <span className="text-gray-500">items</span>
             </div>
-            <div className="flex items-center gap-4">
+            
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                className="hidden sm:flex w-10 h-10 border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
+              >
+                ⟪
+              </Button>
+              
               <Button
                 variant="outline"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
+                className="w-10 h-10 border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
               >
-                {t('pagination.previous')}
+                ←
               </Button>
-              <span className="text-sm font-medium text-gray-700">
-                Page {page}
-              </span>
+
+              <div className="flex items-center gap-1.5 mx-1">
+                {[...Array(totalPages)].map((_, idx) => {
+                  const pageNumber = idx + 1;
+                  const isCurrentPage = pageNumber === page;
+                  const isNearCurrentPage = Math.abs(pageNumber - page) <= 1;
+                  const isEndPage = pageNumber === 1 || pageNumber === totalPages;
+                  
+                  if (isNearCurrentPage || isEndPage) {
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={isCurrentPage ? "default" : "outline"}
+                        onClick={() => setPage(pageNumber)}
+                        className={`w-10 h-10 font-medium transition-all duration-200 ${
+                          isCurrentPage 
+                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md' 
+                            : 'border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
+                        }`}
+                      >
+                        {pageNumber}
+                      </Button>
+                    );
+                  } else if (
+                    (pageNumber === page - 2 && page > 3) ||
+                    (pageNumber === page + 2 && page < totalPages - 2)
+                  ) {
+                    return (
+                      <span key={pageNumber} className="w-10 text-center text-gray-400">
+                        •••
+                      </span>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+
               <Button
                 variant="outline"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!hasNextPage}
+                className="w-10 h-10 border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
               >
-                {t('pagination.next')}
+                →
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => setPage(totalPages)}
+                disabled={page === totalPages}
+                className="hidden sm:flex w-10 h-10 border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors duration-200"
+              >
+                ⟫
               </Button>
             </div>
           </div>
