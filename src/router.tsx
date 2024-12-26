@@ -1,31 +1,27 @@
-import { createRoute, createRootRoute, createRouter } from '@tanstack/react-router';
+import { createRootRoute, createRoute, createRouter,  } from '@tanstack/react-router';
 import { Login } from './pages/Login';
 import { TranscriptionList } from './components/TranscriptionList';
 import { Layout } from './components/Layout';
+import { Outlet } from '@tanstack/react-router';
 
 const rootRoute = createRootRoute({
-  component: () => {
-    console.log('Root component rendering');
-    return <Layout />;
-  }
+  component: () => (
+    <Layout>
+      <Outlet />
+    </Layout>
+  )
 });
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  component: () => {
-    console.log('Login route rendering');
-    return <Login />;
-  }
+  component: Login
 });
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: () => {
-    console.log('Index route rendering');
-    return <TranscriptionList />;
-  }
+  component: TranscriptionList
 });
 
 export const routeTree = rootRoute.addChildren([loginRoute, indexRoute]);

@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { AuthService } from '../services/auth.service';
+import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { Button } from '../components/ui/button';
 
@@ -11,19 +11,17 @@ interface LoginForm {
 }
 
 export function Login() {
-  console.log('Login component rendering');
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const { showToast } = useToast();
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<LoginForm>();
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      console.log('Submitting login:', data);
-      await AuthService.getInstance().login(data);
+      await login(data);
       navigate({ to: '/' });
     } catch (error) {
-      console.error('Login error:', error);
       showToast(error instanceof Error ? error.message : t('auth.invalidCredentials'), 'error');
     }
   };

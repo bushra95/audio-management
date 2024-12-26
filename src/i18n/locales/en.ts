@@ -17,7 +17,11 @@ export const en = {
     api: 'API Transcription',
     user: 'User Transcription',
     noData: 'No transcriptions found',
-    search: 'Search transcriptions...',
+    updateSuccess: 'Transcription updated successfully',
+    deleteSuccess: 'Transcription deleted successfully',
+    validation: {
+      required: 'User transcription is required'
+    }
   },
   actions: {
     save: 'Save',
@@ -25,12 +29,14 @@ export const en = {
     delete: 'Delete',
     deleting: 'Deleting...',
     retry: 'Retry',
+    cancel: 'Cancel',
+    confirm: 'Confirm'
   },
   pagination: {
     previous: 'Previous',
     next: 'Next',
     page: 'Page',
-    showing: 'Showing {{start}}–{{end}} of {{total}} transcriptions'
+    showing: 'Displaying {{count}} records of {{total}} total'
   },
   errors: {
     loading: 'Failed to load transcriptions',
@@ -43,5 +49,5 @@ export const en = {
     deleteMessage: 'Are you sure you want to delete this transcription? This action cannot be undone.',
     cancel: 'Cancel',
     confirm: 'Delete',
-  },
+  }
 }; 

@@ -22,7 +22,10 @@ export class TranscriptionService {
         prisma.transcription.findMany({
           skip,
           take,
-          orderBy: { id: 'asc' },
+          orderBy: [
+            { createdAt: 'asc' },
+            { id: 'asc' }
+          ],
         }),
         prisma.transcription.count()
       ]);
