@@ -3,20 +3,12 @@ import { Button } from './ui/button';
 
 interface ErrorMessageProps {
   message: string;
-  onRetry?: () => void;
 }
 
-export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
-  const { t } = useTranslation();
-
+export function ErrorMessage({ message }: ErrorMessageProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-32 space-y-4">
-      <p className="text-red-500">{message}</p>
-      {onRetry && (
-        <Button variant="outline" onClick={onRetry}>
-          {t('actions.retry')}
-        </Button>
-      )}
+    <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+      <span className="font-medium">Error:</span> {message}
     </div>
   );
 } 

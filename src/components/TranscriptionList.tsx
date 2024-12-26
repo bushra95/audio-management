@@ -2,25 +2,31 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TranscriptionService } from '../services/transcription.service';
-import { useDebounce } from '../hooks/useDebounce';
 import { useToast } from '../contexts/ToastContext';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Button } from './ui/button';
+import { useForm } from 'react-hook-form';
+
+interface TranscriptionForm {
+  sentenceuser: string;
+}
 
 const transcriptionService = TranscriptionService.getInstance();
+const ITEMS_PER_PAGE = 5;
 
 export function TranscriptionList() {
   const { t } = useTranslation();
-  const [page, setPage] = useState(1);
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const { register, handleSubmit } = useForm<TranscriptionForm>();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['transcriptions', page],
-    queryFn: () => transcriptionService.getTranscriptions(page),
+    queryFn: () => transcriptionService.getTranscriptions(page)
   });
 
   const updateMutation = useMutation({
@@ -35,6 +41,10 @@ export function TranscriptionList() {
     },
   });
 
+  const onSubmit = (id: string) => handleSubmit((data) => {
+    updateMutation.mutate({ id, sentenceuser: data.sentenceuser });
+  });
+
   const deleteMutation = useMutation({
     mutationFn: transcriptionService.deleteTranscription,
     onSuccess: () => {
@@ -47,11 +57,6 @@ export function TranscriptionList() {
     },
   });
 
-  const debouncedUpdate = useDebounce(
-    (id: string, sentenceuser: string) => updateMutation.mutate({ id, sentenceuser }),
-    500
-  );
-
   if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorMessage message={t('errors.loading')} />;
   if (!data?.data.length) return <div>{t('transcriptions.noData')}</div>;
@@ -59,61 +64,66 @@ export function TranscriptionList() {
   return (
     <div className="space-y-6">
       {data.data.map((transcription) => (
-        <div key={transcription.id} className="bg-white p-6 rounded-lg shadow-md space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('transcriptions.original')}
-            </label>
-            <div className="bg-gray-50 p-2 rounded">
+        <div key={transcription.id} className="bg-white p-6 rounded-lg shadow-md">
+          <div className="mb-4">
+            <h3 className="font-medium text-gray-600">{t('transcriptions.original')}</h3>
+            <div className="w-full p-2 border rounded bg-gray-50">
               {transcription.sentencelocal}
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('transcriptions.api')}
-            </label>
-            <div className="bg-gray-50 p-2 rounded">
+          <div className="mb-4">
+            <h3 className="font-medium text-gray-600">{t('transcriptions.api')}</h3>
+            <div className="w-full p-2 border rounded bg-gray-50">
               {transcription.sentenceapi}
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {t('transcriptions.user')}
-            </label>
-            <textarea
-              className="w-full p-2 border rounded disabled:bg-gray-100"
-              defaultValue={transcription.sentenceuser}
-              disabled={updateMutation.isPending}
-              onChange={(e) => debouncedUpdate(transcription.id, e.target.value)}
-            />
-          </div>
-
-          <audio controls className="w-full">
+          <form onSubmit={onSubmit(transcription.id)} className="space-y-4">
+            <div>
+              <h3 className="font-medium text-gray-600">{t('transcriptions.user')}</h3>
+              <textarea
+                {...register('sentenceuser')}
+                defaultValue={transcription.sentencelocal}
+                className="w-full p-2 border rounded text-gray-700"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                disabled={updateMutation.isPending}
+              >
+                {t('actions.save')}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setDeleteId(transcription.id)}
+                disabled={deleteMutation.isPending}
+              >
+                {t('actions.delete')}
+              </Button>
+            </div>
+          </form>
+          <audio controls className="mt-4 w-full">
             <source src={transcription.audioUrl} type="audio/mpeg" />
           </audio>
-
-          <Button
-            variant="destructive"
-            onClick={() => setDeleteId(transcription.id)}
-            disabled={deleteMutation.isPending}
-          >
-            {deleteMutation.isPending ? t('actions.deleting') : t('actions.delete')}
-          </Button>
         </div>
       ))}
 
       <div className="flex justify-between mt-6">
         <Button
+          variant="outline"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
         >
           {t('pagination.previous')}
         </Button>
+        <span className="flex items-center text-gray-600">
+          {t('pagination.page')} {page}
+        </span>
         <Button
+          variant="outline"
           onClick={() => setPage((p) => p + 1)}
-          disabled={!data?.data.length}
+          disabled={!data?.data.length || data.data.length < ITEMS_PER_PAGE}
         >
           {t('pagination.next')}
         </Button>

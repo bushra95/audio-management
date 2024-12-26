@@ -1,34 +1,39 @@
 import { createRoute, createRootRoute, createRouter } from '@tanstack/react-router';
 import { Login } from './pages/Login';
 import { TranscriptionList } from './components/TranscriptionList';
-import { AuthLayout } from './layouts/AuthLayout';
-import { ProtectedLayout } from './layouts/ProtectedLayout';
+import { Layout } from './components/Layout';
 
-const rootRoute = createRootRoute();
+const rootRoute = createRootRoute({
+  component: () => {
+    console.log('Root component rendering');
+    return <Layout />;
+  }
+});
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  component: () => (
-    <AuthLayout>
-      <Login />
-    </AuthLayout>
-  )
+  component: () => {
+    console.log('Login route rendering');
+    return <Login />;
+  }
 });
 
-const transcriptionsRoute = createRoute({
+const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: () => (
-    <ProtectedLayout>
-      <TranscriptionList />
-    </ProtectedLayout>
-  )
+  component: () => {
+    console.log('Index route rendering');
+    return <TranscriptionList />;
+  }
 });
 
-const routeTree = rootRoute.addChildren([loginRoute, transcriptionsRoute]);
+export const routeTree = rootRoute.addChildren([loginRoute, indexRoute]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({
+  routeTree,
+  defaultPreload: 'intent',
+});
 
 declare module '@tanstack/react-router' {
   interface Register {

@@ -17,6 +17,7 @@ export const en = {
     api: 'API Transcription',
     user: 'User Transcription',
     noData: 'No transcriptions found',
+    search: 'Search transcriptions...',
   },
   actions: {
     save: 'Save',
@@ -28,6 +29,7 @@ export const en = {
   pagination: {
     previous: 'Previous',
     next: 'Next',
+    page: 'Page'
   },
   errors: {
     loading: 'Failed to load transcriptions',

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { Transcription } from '../types/transcription';
+import { Prisma } from '@prisma/client';
 
 export class TranscriptionService {
   private static instance: TranscriptionService;
@@ -13,36 +14,49 @@ export class TranscriptionService {
     return TranscriptionService.instance;
   }
 
-  async getTranscriptions(page: number = 1, limit: number = 10): Promise<{ data: Transcription[]; total: number }> {
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      prisma.$queryRaw<Transcription[]>`
-        SELECT * FROM "transcription"
-        ORDER BY "createdAt" DESC
-        LIMIT ${limit}
-        OFFSET ${skip}
-      `,
-      prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(*) as count FROM "transcription"
-      `.then(result => Number(result[0].count))
-    ]);
+  async getTranscriptions(
+    page: number = 1,
+    search: string = ''
+  ): Promise<{ data: Transcription[]; total: number }> {
+    try {
+      const skip = (page - 1) * 10;
+      const where: Prisma.transcriptionWhereInput = search
+        ? {
+            OR: [
+              { sentencelocal: { contains: search, mode: Prisma.QueryMode.insensitive } },
+              { sentenceapi: { contains: search, mode: Prisma.QueryMode.insensitive } },
+              { sentenceuser: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            ],
+          }
+        : {};
 
-    return { data, total };
+      const [data, total] = await Promise.all([
+        prisma.transcription.findMany({
+          where,
+          skip,
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.transcription.count({ where }),
+      ]);
+
+      return { data, total };
+    } catch (error) {
+      console.error('Error in getTranscriptions:', error);
+      throw error;
+    }
   }
 
   async updateTranscription(id: string, sentenceuser: string): Promise<Transcription> {
-    return prisma.$queryRaw<Transcription>`
-      UPDATE "transcription"
-      SET "sentenceuser" = ${sentenceuser}
-      WHERE id = ${id}
-      RETURNING *
-    `;
+    return prisma.transcription.update({
+      where: { id },
+      data: { sentenceuser }
+    });
   }
 
   async deleteTranscription(id: string): Promise<void> {
-    await prisma.$executeRaw`
-      DELETE FROM "transcription"
-      WHERE id = ${id}
-    `;
+    await prisma.transcription.delete({
+      where: { id }
+    });
   }
 } 

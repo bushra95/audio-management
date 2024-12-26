@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import { Transcription, TranscriptionResponse } from '../types';
+import { Transcription, TranscriptionResponse } from '../types/transcription';
 
 export class TranscriptionService {
   private static instance: TranscriptionService;
@@ -13,9 +13,14 @@ export class TranscriptionService {
     return TranscriptionService.instance;
   }
 
-  async getTranscriptions(page: number): Promise<TranscriptionResponse> {
+  async getTranscriptions(
+    page: number = 1,
+    search: string = '',
+    sortField: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc'
+  ): Promise<TranscriptionResponse> {
     const response = await apiClient.get<TranscriptionResponse>('/transcriptions', {
-      params: { page }
+      params: { page, search, sortField, sortOrder }
     });
     return response.data;
   }

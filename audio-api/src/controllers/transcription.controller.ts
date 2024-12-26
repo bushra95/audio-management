@@ -6,10 +6,6 @@ const updateSchema = z.object({
   sentenceuser: z.string()
 });
 
-const pageSchema = z.object({
-  page: z.string().transform(Number).optional()
-});
-
 export class TranscriptionController {
   private static instance: TranscriptionController;
   private transcriptionService: TranscriptionService;
@@ -27,15 +23,15 @@ export class TranscriptionController {
 
   async getTranscriptions(req: Request, res: Response): Promise<void> {
     try {
-      const { page } = pageSchema.parse(req.query);
-      const result = await this.transcriptionService.getTranscriptions(page);
+      const { page, search } = req.query;
+      const result = await this.transcriptionService.getTranscriptions(
+        Number(page) || 1,
+        String(search || '')
+      );
       res.json(result);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: 'Invalid input', errors: error.errors });
-        return;
-      }
-      res.status(500).json({ message: 'Internal server error' });
+      console.error('Controller error:', error);
+      res.status(500).json({ message: 'Failed to fetch transcriptions' });
     }
   }
 
