@@ -23,10 +23,9 @@ export class TranscriptionController {
 
   async getTranscriptions(req: Request, res: Response): Promise<void> {
     try {
-      const { page, search } = req.query;
+      const { page } = req.query;
       const result = await this.transcriptionService.getTranscriptions(
-        Number(page) || 1,
-        String(search || '')
+        Number(page) || 1
       );
       res.json(result);
     } catch (error) {

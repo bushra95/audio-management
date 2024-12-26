@@ -29,7 +29,8 @@ export const en = {
   pagination: {
     previous: 'Previous',
     next: 'Next',
-    page: 'Page'
+    page: 'Page',
+    showing: 'Showing {{start}}–{{end}} of {{total}} transcriptions'
   },
   errors: {
     loading: 'Failed to load transcriptions',

@@ -1,6 +1,5 @@
 import { prisma } from '../lib/prisma';
 import { Transcription } from '../types/transcription';
-import { Prisma } from '@prisma/client';
 
 export class TranscriptionService {
   private static instance: TranscriptionService;
@@ -14,30 +13,18 @@ export class TranscriptionService {
     return TranscriptionService.instance;
   }
 
-  async getTranscriptions(
-    page: number = 1,
-    search: string = ''
-  ): Promise<{ data: Transcription[]; total: number }> {
+  async getTranscriptions(page: number = 1): Promise<{ data: Transcription[]; total: number }> {
     try {
-      const skip = (page - 1) * 10;
-      const where: Prisma.transcriptionWhereInput = search
-        ? {
-            OR: [
-              { sentencelocal: { contains: search, mode: Prisma.QueryMode.insensitive } },
-              { sentenceapi: { contains: search, mode: Prisma.QueryMode.insensitive } },
-              { sentenceuser: { contains: search, mode: Prisma.QueryMode.insensitive } },
-            ],
-          }
-        : {};
+      const take = 5;
+      const skip = (page - 1) * take;
 
       const [data, total] = await Promise.all([
         prisma.transcription.findMany({
-          where,
           skip,
-          take: 10,
-          orderBy: { createdAt: 'desc' },
+          take,
+          orderBy: { id: 'asc' },
         }),
-        prisma.transcription.count({ where }),
+        prisma.transcription.count()
       ]);
 
       return { data, total };
