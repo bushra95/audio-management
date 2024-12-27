@@ -1,23 +1,9 @@
-import { Router } from 'express';
-import { AuthController } from '../controllers/auth.controller';
-import { validate } from '../middleware/validate.middleware';
-import { loginSchema, refreshTokenSchema } from '../schemas/auth.schema';
+import express from 'express';
+import { login, register, refresh } from '../controllers/auth.controller';
 
-const router = Router();
-const authController = AuthController.getInstance();
+export const authRouter = express.Router();
 
-router.post('/login',
-  validate(loginSchema),
-  async (req, res) => {
-    await authController.login(req, res);
-  }
-);
-
-router.post('/refresh',
-  validate(refreshTokenSchema),
-  async (req, res) => {
-    await authController.refresh(req, res);
-  }
-);
-
-export const authRoutes = router; 
+authRouter.post('/login', login);
+authRouter.post('/register', register);
+authRouter.post('/refresh', refresh); 
+authRouter.post('/refresh', refresh); 
