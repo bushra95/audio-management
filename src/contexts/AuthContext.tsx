@@ -1,42 +1,35 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { AuthService } from '../services/auth.service';
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (data: { email: string; password: string }) => Promise<LoginResponse>;
   logout: () => void;
+}
+
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const authService = AuthService.getInstance();
 
   useEffect(() => {
-    // Check token on mount and token changes
-    const checkAuth = () => {
-      const isAuth = authService.isAuthenticated();
-      setIsAuthenticated(isAuth);
-    };
-
-    checkAuth();
-    window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
+    const token = AuthService.getToken();
+    setIsAuthenticated(!!token);
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
-    await authService.login(credentials);
+  const login = async (data: { email: string; password: string }) => {
+    const response = await AuthService.login(data.email, data.password);
     setIsAuthenticated(true);
+    return response;
   };
 
   const logout = () => {
-    authService.logout();
+    AuthService.logout();
     setIsAuthenticated(false);
   };
 
@@ -45,12 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}; 
