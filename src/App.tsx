@@ -1,5 +1,4 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ToastProvider } from './contexts/ToastContext';
 import { Login } from './pages/Login';
 import { Layout } from './components/Layout';
@@ -8,24 +7,24 @@ import { PrivateRoute } from './components/PrivateRoute';
 const router = createBrowserRouter([
   {
     path: '/login',
-    element: <Login />
+    element: (
+      <ToastProvider>
+        <Login />
+      </ToastProvider>
+    )
   },
   {
     path: '/',
     element: (
-      <PrivateRoute>
-        <Layout />
-      </PrivateRoute>
+      <ToastProvider>
+        <PrivateRoute>
+          <Layout />
+        </PrivateRoute>
+      </ToastProvider>
     )
   }
 ]);
 
 export function App() {
-  return (
-    <ToastProvider>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ToastProvider>
-  );
+  return <RouterProvider router={router} />;
 }
