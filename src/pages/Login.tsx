@@ -1,10 +1,8 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { Button } from '../components/ui/button';
-import { useEffect } from 'react';
 
 interface LoginForm {
   email: string;
@@ -13,23 +11,16 @@ interface LoginForm {
 
 export function Login() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login } = useAuth();
   const { showToast } = useToast();
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<LoginForm>();
+  const { register, handleSubmit } = useForm<LoginForm>();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate({ to: '/', replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async ({ email, password }: LoginForm) => {
     try {
-      await login(data);
-      navigate({ to: '/', replace: true });
+      await login(email, password);
+      // Navigation is handled in AuthContext
     } catch (error) {
-      showToast(error instanceof Error ? error.message : t('auth.invalidCredentials'), 'error');
+      showToast(error instanceof Error ? error.message : 'Invalid credentials', 'error');
     }
   };
 
@@ -72,10 +63,9 @@ export function Login() {
           
           <Button 
             type="submit" 
-            disabled={isSubmitting} 
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl transition-colors duration-200"
           >
-            {isSubmitting ? t('auth.submitting') : t('auth.submit')}
+            {t('auth.submit')}
           </Button>
         </form>
       </div>

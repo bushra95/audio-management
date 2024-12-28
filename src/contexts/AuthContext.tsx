@@ -1,43 +1,40 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthService } from '../services/auth.service';
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const authService = AuthService.getInstance();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Check token on mount and token changes
-    const checkAuth = () => {
-      const isAuth = authService.isAuthenticated();
-      setIsAuthenticated(isAuth);
-    };
-
-    checkAuth();
-    window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
+    const token = localStorage.getItem('auth_token');
+    setIsAuthenticated(!!token);
   }, []);
 
-  const login = async (credentials: LoginCredentials) => {
-    await authService.login(credentials);
-    setIsAuthenticated(true);
+  const login = async (email: string, password: string) => {
+    try {
+      const { token } = await AuthService.login(email, password);
+      localStorage.setItem('auth_token', token);
+      setIsAuthenticated(true);
+      navigate('/');
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logout = () => {
-    authService.logout();
+    localStorage.removeItem('auth_token');
     setIsAuthenticated(false);
+    navigate('/login');
   };
 
   return (
@@ -47,10 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}; 

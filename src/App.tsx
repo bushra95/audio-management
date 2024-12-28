@@ -9,20 +9,27 @@ export function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <AuthProvider>
+                <Login />
+              </AuthProvider>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <AuthProvider>
                 <PrivateRoute>
                   <Layout />
                 </PrivateRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AuthProvider>
+              </AuthProvider>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </ToastProvider>
     </BrowserRouter>
   );
