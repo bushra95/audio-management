@@ -33,7 +33,7 @@ export function Header() {
             className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-all duration-200"
           >
             <LogOut size={18} />
-            <span>{t('auth.logout')}</span>
+            <span>{t('Logout')}</span>
           </button>
         </div>
       </div>
