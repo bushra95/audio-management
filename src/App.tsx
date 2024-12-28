@@ -8,8 +8,8 @@ import { PrivateRoute } from './components/PrivateRoute';
 export function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
+      <ToastProvider>
+        <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route
@@ -22,8 +22,8 @@ export function App() {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </ToastProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }
