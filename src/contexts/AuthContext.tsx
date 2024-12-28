@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../services/auth.service';
 
@@ -9,25 +9,21 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const authService = AuthService.getInstance();
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    setIsAuthenticated(!!token);
-  }, []);
-
   const login = async (email: string, password: string) => {
-    const { token } = await AuthService.login(email, password);
-    localStorage.setItem('auth_token', token);
+    const response = await authService.login({ email, password });
+    localStorage.setItem('auth_token', response.token);
     setIsAuthenticated(true);
     navigate('/');
   };
 
   const logout = () => {
-    localStorage.removeItem('auth_token');
+    authService.logout();
     setIsAuthenticated(false);
     navigate('/login');
   };
