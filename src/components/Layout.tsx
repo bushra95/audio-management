@@ -2,7 +2,7 @@ import { Header } from './Header';
 import { useLocation } from '@tanstack/react-router';
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
