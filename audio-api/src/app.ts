@@ -1,15 +1,18 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { ENV } from './config/env';
 import { authRouter } from './routes/auth.routes';
-import { Request, Response, } from 'express';
+import { transcriptionRoutes } from './routes/transcription.routes';
+import { authMiddleware } from './middleware/auth.middleware';
 
 export const app = express();
 
 // CORS configuration
 app.use(cors({
   origin: ENV.CORS_ORIGIN,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -17,8 +20,12 @@ app.use(express.json());
 // API routes with prefix
 app.use('/api/auth', authRouter);
 
+// Protected routes
+app.use('/api/transcriptions', authMiddleware, transcriptionRoutes);
+
 // Error handling middleware
-app.use((err: Error, _req: Request, res: Response) => {
-  console.error(err.stack);
+app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+  console.error('Global error:', err);
   res.status(500).json({ error: err.message || 'Something went wrong!' });
+  next(err);
 }); 

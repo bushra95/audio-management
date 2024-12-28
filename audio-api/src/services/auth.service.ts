@@ -1,13 +1,13 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { JwtPayload, TokenPair, User } from '../types/auth';
-import { ENV } from '../config/env';
-import { prisma } from '../lib/prisma';
+import { PrismaClient } from '@prisma/client';
+import { comparePasswords, hashPassword } from '../utils/auth';
 
 export class AuthService {
   private static instance: AuthService;
+  private prisma: PrismaClient;
 
-  private constructor() {}
+  private constructor() {
+    this.prisma = new PrismaClient();
+  }
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -16,34 +16,24 @@ export class AuthService {
     return AuthService.instance;
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({ where: { email } });
+  async createUser(email: string, password: string) {
+    const hashedPassword = await hashPassword(password);
+    return this.prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword
+      }
+    });
+  }
+
+  async validateUser(email: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email }
+    });
+
     if (!user) return null;
 
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) return null;
-
-    return user;
-  }
-
-  generateTokens(user: User): TokenPair {
-    const payload: JwtPayload = {
-      userId: user.id,
-      email: user.email
-    };
-
-    const token = jwt.sign(payload, ENV.JWT_SECRET, { expiresIn: '15m' });
-    const refreshToken = jwt.sign(payload, ENV.JWT_REFRESH_SECRET, { expiresIn: '7d' });
-
-    return { token, refreshToken };
-  }
-
-  async validateRefreshToken(refreshToken: string): Promise<User | null> {
-    try {
-      const payload = jwt.verify(refreshToken, ENV.JWT_REFRESH_SECRET) as JwtPayload;
-      return await prisma.user.findUnique({ where: { id: payload.userId } });
-    } catch {
-      return null;
-    }
+    const isValid = await comparePasswords(password, user.password);
+    return isValid ? user : null;
   }
 } 
