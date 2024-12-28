@@ -1,25 +1,31 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { ENV } from './config/env';
-import { authRoutes } from './routes/auth.routes';
+import { authRouter } from './routes/auth.routes';
 import { transcriptionRoutes } from './routes/transcription.routes';
-import { errorHandler } from './middleware/error.middleware';
-import { healthRoutes } from './routes/health.routes';
+import { authMiddleware } from './middleware/auth.middleware';
 
-const app = express();
+export const app = express();
 
+// CORS configuration
 app.use(cors({
   origin: ENV.CORS_ORIGIN,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-app.use('/api/transcriptions', transcriptionRoutes);
-app.use('/api/health', healthRoutes);
+// API routes with prefix
+app.use('/api/auth', authRouter);
 
-// Error handling middleware should be last
-app.use(errorHandler);
+// Protected routes
+app.use('/api/transcriptions', authMiddleware, transcriptionRoutes);
 
-export { app }; 
+// Error handling middleware
+app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+  console.error('Global error:', err);
+  res.status(500).json({ error: err.message || 'Something went wrong!' });
+  next(err);
+}); 

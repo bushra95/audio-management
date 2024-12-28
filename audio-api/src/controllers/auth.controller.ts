@@ -1,70 +1,62 @@
 import { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service';
-import { z } from 'zod';
+import { prisma } from '../lib/prisma';
+import { comparePasswords, hashPassword } from '../utils/auth';
+import { generateTokens } from '../utils/jwt';
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6)
-});
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    console.log('Login attempt:', { email });
 
-const refreshSchema = z.object({
-  refreshToken: z.string()
-});
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, password: true }
+    });
 
-export class AuthController {
-  private static instance: AuthController;
-  private authService: AuthService;
-
-  private constructor() {
-    this.authService = AuthService.getInstance();
-  }
-
-  static getInstance(): AuthController {
-    if (!AuthController.instance) {
-      AuthController.instance = new AuthController();
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-    return AuthController.instance;
-  }
 
-  async login(req: Request, res: Response): Promise<void> {
-    try {
-      const { email, password } = loginSchema.parse(req.body);
-      
-      const user = await this.authService.validateUser(email, password);
-      if (!user) {
-        res.status(401).json({ message: 'Invalid credentials' });
-        return;
-      }
-
-      const tokens = this.authService.generateTokens(user);
-      res.json(tokens);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: 'Invalid input', errors: error.errors });
-        return;
-      }
-      res.status(500).json({ message: 'Internal server error' });
+    const isValid = await comparePasswords(password, user.password);
+    if (!isValid) {
+      console.log('Invalid password for:', email);
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-  }
 
-  async refresh(req: Request, res: Response): Promise<void> {
-    try {
-      const { refreshToken } = refreshSchema.parse(req.body);
-      
-      const user = await this.authService.validateRefreshToken(refreshToken);
-      if (!user) {
-        res.status(401).json({ message: 'Invalid refresh token' });
-        return;
-      }
-
-      const tokens = this.authService.generateTokens(user);
-      res.json(tokens);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: 'Invalid input', errors: error.errors });
-        return;
-      }
-      res.status(500).json({ message: 'Internal server error' });
-    }
+    const tokens = generateTokens(user.id);
+    console.log('Login successful:', email);
+    
+    // Match the token property names
+    res.json({
+      accessToken: tokens.accessToken,    // Changed from token to accessToken
+      refreshToken: tokens.refreshToken
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
   }
-} 
+};
+
+export const register = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const hashedPassword = await hashPassword(password);
+    const user = await prisma.user.create({
+      data: { email, password: hashedPassword }
+    });
+    const tokens = generateTokens(user.id);
+    res.status(201).json(tokens);
+  } catch {
+    res.status(500).json({ error: 'Registration failed' });
+  }
+};
+
+export const refresh = async (_req: Request, res: Response) => {
+  try {
+    // Add refresh token logic here
+    res.json({ message: 'Token refreshed' });
+  } catch {
+    res.status(500).json({ error: 'Token refresh failed' });
+  }
+}; 

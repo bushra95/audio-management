@@ -1,61 +1,101 @@
 import { Request, Response } from 'express';
-import { TranscriptionService } from '../services/transcription.service';
-import { z } from 'zod';
-
-const updateSchema = z.object({
-  sentenceuser: z.string()
-});
+import { prisma } from '../lib/prisma';
 
 export class TranscriptionController {
-  private static instance: TranscriptionController;
-  private transcriptionService: TranscriptionService;
-
-  private constructor() {
-    this.transcriptionService = TranscriptionService.getInstance();
+  constructor() {
+    this.getTranscriptions = this.getTranscriptions.bind(this);
+    this.createTranscription = this.createTranscription.bind(this);
+    this.updateTranscription = this.updateTranscription.bind(this);
+    this.deleteTranscription = this.deleteTranscription.bind(this);
   }
 
-  static getInstance(): TranscriptionController {
-    if (!TranscriptionController.instance) {
-      TranscriptionController.instance = new TranscriptionController();
-    }
-    return TranscriptionController.instance;
-  }
-
-  async getTranscriptions(req: Request, res: Response): Promise<void> {
+  async getTranscriptions(req: Request, res: Response) {
     try {
-      const { page } = req.query;
-      const result = await this.transcriptionService.getTranscriptions(
-        Number(page) || 1
-      );
-      res.json(result);
+      const page = Number(req.query.page) || 1;
+      const limit = 5; // 5 items per page
+      const skip = (page - 1) * limit;
+
+      const [transcriptions, total] = await Promise.all([
+        prisma.transcription.findMany({
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.transcription.count()
+      ]);
+
+      res.json({
+        data: transcriptions,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      });
     } catch (error) {
-      console.error('Controller error:', error);
-      res.status(500).json({ message: 'Failed to fetch transcriptions' });
+      console.error('Get transcriptions error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch transcriptions',
+        data: [],
+        total: 0,
+        page: 1,
+        totalPages: 0
+      });
     }
   }
 
-  async updateTranscription(req: Request, res: Response): Promise<void> {
+  async createTranscription(req: Request, res: Response) {
+    try {
+      const transcription = await prisma.transcription.create({
+        data: {
+          sentencelocal: req.body.sentencelocal,
+          sentenceapi: req.body.sentenceapi,
+          sentenceuser: req.body.sentenceuser || null,
+          audioUrl: req.body.audioUrl
+        }
+      });
+      res.status(201).json(transcription);
+    } catch (error) {
+      console.error('Create transcription error:', error);
+      res.status(500).json({ error: 'Failed to create transcription' });
+    }
+  }
+
+  async updateTranscription(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { sentenceuser } = updateSchema.parse(req.body);
-      const transcription = await this.transcriptionService.updateTranscription(id, sentenceuser);
+      console.log('Updating transcription:', { id, body: req.body });
+
+      const existing = await prisma.transcription.findUnique({
+        where: { id }
+      });
+
+      if (!existing) {
+        return res.status(404).json({ error: 'Transcription not found' });
+      }
+
+      const transcription = await prisma.transcription.update({
+        where: { id },
+        data: {
+          sentenceuser: req.body.sentenceuser
+        }
+      });
+
+      console.log('Updated transcription:', transcription);
       res.json(transcription);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: 'Invalid input', errors: error.errors });
-        return;
-      }
-      res.status(500).json({ message: 'Internal server error' });
+      console.error('Update transcription error:', error);
+      res.status(500).json({ error: 'Failed to update transcription' });
     }
   }
 
-  async deleteTranscription(req: Request, res: Response): Promise<void> {
+  async deleteTranscription(req: Request, res: Response) {
     try {
-      const { id } = req.params;
-      await this.transcriptionService.deleteTranscription(id);
-      res.status(204).send();
-    } catch {
-      res.status(500).json({ message: 'Internal server error' });
+      await prisma.transcription.delete({
+        where: { id: req.params.id }
+      });
+      res.status(200).json({ message: 'Transcription deleted' });
+    } catch (error) {
+      console.error('Delete transcription error:', error);
+      res.status(500).json({ error: 'Failed to delete transcription' });
     }
   }
 } 

@@ -2,4 +2,14 @@
 builder = "DOCKERFILE"
 
 [deploy]
-startCommand = "npm start" 
+startCommand = "npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 100
+
+[deploy.env]
+NODE_ENV = "production"
+DATABASE_URL = "postgresql://postgres:LaVzarpyWoOBiRykBmgnpmHXpwxxyfDl@junction.proxy.rlwy.net:10109/railway"
+JWT_SECRET = "audio_transcription_secret_key_2024"
+JWT_REFRESH_SECRET = "audio_transcription_refresh_key_2024"
+PORT = "5001"
+CORS_ORIGIN = "https://audio-management.vercel.app" 
