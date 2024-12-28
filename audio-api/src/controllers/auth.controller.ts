@@ -7,10 +7,15 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     console.log('Login attempt:', { email });
+    console.log('Database URL:', process.env.DATABASE_URL); // Debug log
 
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, password: true }
+      select: {
+        id: true,
+        email: true,
+        password: true
+      }
     });
 
     if (!user) {
@@ -26,12 +31,7 @@ export const login = async (req: Request, res: Response) => {
 
     const tokens = generateTokens(user.id);
     console.log('Login successful:', email);
-    
-    // Match the token property names
-    res.json({
-      accessToken: tokens.accessToken,    // Changed from token to accessToken
-      refreshToken: tokens.refreshToken
-    });
+    res.json(tokens);
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Login failed' });

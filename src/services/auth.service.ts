@@ -1,30 +1,35 @@
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '../lib/api-client';
+import { ENV } from '../config/env';
+import { LoginCredentials, AuthResponse } from '../types/auth';
 
-interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-}
+export class AuthService {
+  private static instance: AuthService;
 
-export const AuthService = {
-  async login(email: string, password: string) {
-    const { data } = await apiClient.post<LoginResponse>('/auth/login', {
-      email,
-      password
-    });
-    
-    // Store tokens
-    localStorage.setItem('auth_token', data.accessToken);
-    localStorage.setItem('refresh_token', data.refreshToken);
-    
-    return data;
-  },
+  private constructor() {}
 
-  logout() {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-  },
-
-  getToken() {
-    return localStorage.getItem('auth_token');
+  static getInstance(): AuthService {
+    if (!AuthService.instance) {
+      AuthService.instance = new AuthService();
+    }
+    return AuthService.instance;
   }
-}; 
+
+  async login(credentials: LoginCredentials): Promise<void> {
+    console.log('Logging in with:', credentials);
+    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+    console.log('Login response:', response.data);
+    localStorage.setItem(ENV.AUTH_TOKEN_KEY, response.data.token);
+    localStorage.setItem(ENV.REFRESH_TOKEN_KEY, response.data.refreshToken);
+  }
+
+  async logout(): Promise<void> {
+    localStorage.removeItem(ENV.AUTH_TOKEN_KEY);
+    localStorage.removeItem(ENV.REFRESH_TOKEN_KEY);
+    window.location.href = '/login';
+  }
+
+  isAuthenticated(): boolean {
+    console.log('Checking auth:', localStorage.getItem(ENV.AUTH_TOKEN_KEY));
+    return !!localStorage.getItem(ENV.AUTH_TOKEN_KEY);
+  }
+} 
