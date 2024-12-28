@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../services/auth.service';
 
 interface AuthContextType {
@@ -13,7 +13,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -21,14 +20,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    try {
-      const { token } = await AuthService.login(email, password);
-      localStorage.setItem('auth_token', token);
-      setIsAuthenticated(true);
-      navigate('/');
-    } catch (error) {
-      throw error;
-    }
+    const { token } = await AuthService.login(email, password);
+    localStorage.setItem('auth_token', token);
+    setIsAuthenticated(true);
+    navigate('/');
   };
 
   const logout = () => {
