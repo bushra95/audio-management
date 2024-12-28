@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
@@ -20,14 +20,14 @@ export function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate({ to: '/', replace: true });
+      navigate('/', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
   const onSubmit = async (data: LoginForm) => {
     try {
       await login(data);
-      navigate({ to: '/' });
+      navigate('/', { replace: true });
     } catch (error) {
       showToast(error instanceof Error ? error.message : t('auth.invalidCredentials'), 'error');
     }
