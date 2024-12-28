@@ -27,7 +27,7 @@ export function Login() {
   const onSubmit = async (data: LoginForm) => {
     try {
       await login(data);
-      navigate({ to: '/', replace: true });
+      navigate({ to: '/' });
     } catch (error) {
       showToast(error instanceof Error ? error.message : t('auth.invalidCredentials'), 'error');
     }
