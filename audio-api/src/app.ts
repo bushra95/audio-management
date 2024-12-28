@@ -3,7 +3,6 @@ import cors from 'cors';
 import { ENV } from './config/env';
 import { authRouter } from './routes/auth.routes';
 import { transcriptionRoutes } from './routes/transcription.routes';
-import { authMiddleware } from './middleware/auth.middleware';
 
 export const app = express();
 
@@ -19,9 +18,7 @@ app.use(express.json());
 
 // API routes with prefix
 app.use('/api/auth', authRouter);
-
-// Protected routes
-app.use('/api/transcriptions', authMiddleware, transcriptionRoutes);
+app.use('/api/transcriptions', transcriptionRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
