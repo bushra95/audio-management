@@ -183,7 +183,7 @@ export function TranscriptionList() {
                       disabled={updateMutation.isPending}
                       className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-5 py-2 rounded-lg shadow-sm hover:shadow transition-all duration-200"
                     >
-                      {t('actions.save')}
+                      {t('save')}
                     </Button>
                     <Button
                       type="button"
@@ -192,7 +192,7 @@ export function TranscriptionList() {
                       disabled={deleteMutation.isPending}
                       className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all duration-200"
                     >
-                      {t('actions.delete')}
+                      {t('delete')}
                     </Button>
                   </div>
                 </div>

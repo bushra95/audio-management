@@ -29,7 +29,7 @@ export function Login() {
       <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-xl border border-gray-100">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            {t('auth.login')}
+            {t('Login')}
           </h2>
           <p className="text-gray-500">
             Sign in to manage your transcriptions
@@ -39,7 +39,7 @@ export function Login() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.email')}
+              {t('email')}
             </label>
             <input
               {...register('email')}
@@ -51,7 +51,7 @@ export function Login() {
           
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('auth.password')}
+              {t('password')}
             </label>
             <input
               {...register('password')}
