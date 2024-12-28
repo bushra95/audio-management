@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api-client';
 
 interface LoginResponse {
-  token: string;
+  accessToken: string;
   refreshToken: string;
 }
 
@@ -13,7 +13,7 @@ export const AuthService = {
     });
     
     // Store tokens
-    localStorage.setItem('auth_token', data.token);
+    localStorage.setItem('auth_token', data.accessToken);
     localStorage.setItem('refresh_token', data.refreshToken);
     
     return data;
