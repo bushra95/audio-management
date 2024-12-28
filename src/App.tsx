@@ -1,30 +1,29 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './contexts/ToastContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { Login } from './pages/Login';
 import { Layout } from './components/Layout';
 import { PrivateRoute } from './components/PrivateRoute';
 
-const router = createBrowserRouter([
-  {
-    path: '/login',
-    element: (
-      <ToastProvider>
-        <Login />
-      </ToastProvider>
-    )
-  },
-  {
-    path: '/',
-    element: (
-      <ToastProvider>
-        <PrivateRoute>
-          <Layout />
-        </PrivateRoute>
-      </ToastProvider>
-    )
-  }
-]);
-
 export function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <BrowserRouter>
+      <ToastProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <PrivateRoute>
+                  <Layout />
+                </PrivateRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </ToastProvider>
+    </BrowserRouter>
+  );
 }
